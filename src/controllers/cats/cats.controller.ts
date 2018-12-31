@@ -1,29 +1,39 @@
-import { Controller, Get, Post, Delete, Put, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Put, Param, Body } from '@nestjs/common';
+import { CatsService } from '../../services/cats/cats.service';
 
 @Controller('cats')
 export class CatsController {
+
+    constructor(private readonly catsService: CatsService) {}
+
     @Get()
-    findAll() {
-        return `Esta accion retorna todos los gatos`;
+    async findAll() {
+        return this.catsService.findAll();
     }
 
     @Get(':id')
-    findOne(@Param('id') id) {
-        return `Esta accion retorna un gato con el id ${id}`;
+    async findOne(@Param('id') id) {
+        id = Number(id);
+        return this.catsService.findById(id);
     }
 
     @Post()
-    create() {
-        return `Esta accion crea un nuevo gato`;
+    async create(@Body() body) {
+        this.catsService.create(body);
+        return body;
     }
 
-    @Put()
-    update() {
-        return `Esta acction actualiza un nuevo gato`;
+    @Put(':id')
+    async update(@Param('id') id, @Body() body) {
+        id = Number(id);
+        this.catsService.update(id, body);
+        return this.catsService.findById(id);
     }
 
-    @Delete()
-    remove() {
-        return `Esta accion elimina un gato`;
+    @Delete(':id')
+    async remove(@Param('id') id) {
+        id = Number(id);
+        this.catsService.remove(id);
+        return this.catsService.findById(id);
     }
 }
