@@ -46,18 +46,12 @@ export class CatsService {
 
     async update(id: number, cat: Cats) {
         const _cat = await this.findById(id);
-        if (!_cat) {
-            throw new BadRequestException('No existe el recurso');
-        }
         this.catRepository.merge(_cat, cat);
         return await this.catRepository.save(_cat);
     }
 
     async remove(id: number) {
         const cat = await this.findById(id);
-        if (!cat) {
-            throw new BadRequestException('No existe el recurso');
-        }
         return await this.catRepository.remove(cat);
     }
 }
