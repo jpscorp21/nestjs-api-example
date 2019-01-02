@@ -1,12 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { Cats } from '../../models/cats';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CatEntity } from '../../entities/cats.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CatsService {
 
     private cats: Cats[];
 
-    constructor() {
+    constructor(
+        @InjectRepository(CatEntity)
+        private readonly catRepository: Repository<CatEntity>,
+    ) {
         this.init();
     }
 
@@ -21,31 +27,37 @@ export class CatsService {
         ];
     }
 
-    findAll() {
-        return this.cats;
+    async findAll() {
+        return await this.catRepository.find();
     }
 
-    findById(id: number) {
-        return this.cats.filter((x) => x.id === id);
+    async findById(id: number) {
+        const cat = await this.catRepository.findOne(id);
+        if (!cat) {
+            throw new BadRequestException('No existe el recurso');
+        }
+        return cat;
     }
 
-    create(cat: Cats) {
-        this.cats.push(cat);
+    async create(cat: Cats) {
+        const _cat = this.catRepository.create(cat);
+        return await this.catRepository.save(_cat);
     }
 
-    update(id: number, cat: Cats) {
-        this.cats = this.cats.map((x) => {
-            if (x.id === id) {
-                x.color = cat.color;
-                x.edad = cat.edad;
-                x.nombre = cat.nombre;
-                x.genero = cat.genero;
-            }
-            return x;
-        });
+    async update(id: number, cat: Cats) {
+        const _cat = await this.findById(id);
+        if (!_cat) {
+            throw new BadRequestException('No existe el recurso');
+        }
+        this.catRepository.merge(_cat, cat);
+        return await this.catRepository.save(_cat);
     }
 
-    remove(id: number) {
-        this.cats = this.cats.filter((x) => x.id !== id);
+    async remove(id: number) {
+        const cat = await this.findById(id);
+        if (!cat) {
+            throw new BadRequestException('No existe el recurso');
+        }
+        return await this.catRepository.remove(cat);
     }
 }
